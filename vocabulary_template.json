@@ -1,0 +1,32 @@
+[
+  {
+    "word": "resilient",
+    "meaning": "kiên cường, có khả năng phục hồi nhanh",
+    "pronunciation": "/rɪˈzɪl.jənt/",
+    "part_of_speech": "adjective",
+    "example": "Local communities proved to be remarkably resilient after the flood.",
+    "topics": ["Psychology", "Society"],
+    "collocations": ["highly resilient", "resilient economy", "remain resilient"],
+    "notes": "Thường đi kèm giới từ 'to': resilient to change/damage"
+  },
+  {
+    "word": "alleviate",
+    "meaning": "làm giảm bớt, xoa dịu (nỗi đau, vấn đề)",
+    "pronunciation": "/əˈliː.vi.eɪt/",
+    "part_of_speech": "verb",
+    "example": "The government introduced new measures to alleviate poverty in rural areas.",
+    "topics": ["Society", "Economy", "Health"],
+    "collocations": ["alleviate poverty", "alleviate traffic congestion", "alleviate symptoms"],
+    "notes": "Đồng nghĩa: ease, reduce, mitigate"
+  },
+  {
+    "word": "pose a threat to",
+    "meaning": "gây ra / đặt ra mối đe dọa đối với",
+    "pronunciation": "/pəʊz ə θret tuː/",
+    "part_of_speech": "phrase",
+    "example": "Excessive carbon emissions pose a serious threat to global biodiversity.",
+    "topics": ["Environment", "Technology"],
+    "collocations": ["pose a serious threat", "pose a potential risk to"],
+    "notes": "Luôn dùng giới từ 'to', không dùng 'for'"
+  }
+]
