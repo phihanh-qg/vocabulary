@@ -1,7 +1,8 @@
-import { loadVocabulary, saveVocabulary } from './vocabStorage';
+import { loadVocabulary } from './vocabStorage';
 import { loadReviewLogs } from './historyStorage';
 import { loadSettings, saveSettings } from './settingsStorage';
-import { loadParagraphs, saveParagraphs } from './paragraphStorage';
+import { loadParagraphs } from './paragraphStorage';
+import bundledStudyData from '../../data/study_data.json';
 
 export interface FullBackupPayload {
   version: number;
@@ -36,18 +37,21 @@ export function generateFullBackup(): FullBackupPayload {
   };
 }
 
-export function restoreFullBackup(data: FullBackupPayload): { success: boolean; message: string } {
+export function restoreFullBackup(
+  data: FullBackupPayload,
+  options?: { skipCloudSync?: boolean }
+): { success: boolean; message: string } {
   try {
     if (!data.vocabulary || !Array.isArray(data.vocabulary)) {
       return { success: false, message: 'Dữ liệu sao lưu không hợp lệ (thiếu danh sách từ vựng).' };
     }
 
-    // Restore vocabulary
-    saveVocabulary(data.vocabulary);
+    // Restore vocabulary directly to localStorage to avoid recursive sync loops
+    localStorage.setItem('active_recall_vocab_v1', JSON.stringify(data.vocabulary));
 
     // Restore paragraphs
     if (data.paragraphs && Array.isArray(data.paragraphs)) {
-      saveParagraphs(data.paragraphs);
+      localStorage.setItem('active_recall_paragraphs_v1', JSON.stringify(data.paragraphs));
     }
 
     // Restore review history
@@ -65,8 +69,8 @@ export function restoreFullBackup(data: FullBackupPayload): { success: boolean; 
       saveSettings(data.settings);
     }
 
-    // Also sync to disk
-    syncToDisk();
+    // Also sync to disk (and cloud if not skipped)
+    syncToDisk(options);
 
     return { 
       success: true, 
@@ -78,9 +82,33 @@ export function restoreFullBackup(data: FullBackupPayload): { success: boolean; 
 }
 
 /**
- * Asynchronously syncs full database directly to local disk (data/study_data.json)
+ * Hydrates localStorage with bundled study_data.json on first launch (e.g. fresh Android APK install)
  */
-export async function syncToDisk(): Promise<boolean> {
+export function bootstrapInitialData(): boolean {
+  try {
+    const existingVocab = localStorage.getItem('active_recall_vocab_v1');
+    if (existingVocab) return false;
+
+    const bundled = bundledStudyData as unknown as FullBackupPayload;
+    if (bundled && Array.isArray(bundled.vocabulary) && bundled.vocabulary.length > 0) {
+      restoreFullBackup(bundled, { skipCloudSync: true });
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Asynchronously syncs full database directly to local disk (data/study_data.json)
+ * and schedules Cloud Sync if configured.
+ */
+export async function syncToDisk(options?: { skipCloudSync?: boolean }): Promise<boolean> {
+  if (!options?.skipCloudSync) {
+    import('./cloudSync').then(m => m.scheduleAutoCloudSync()).catch(() => {});
+  }
+
   try {
     const payload = generateFullBackup();
     const res = await fetch('/api/sync', {
@@ -89,8 +117,8 @@ export async function syncToDisk(): Promise<boolean> {
       body: JSON.stringify(payload, null, 2),
     });
     return res.ok;
-  } catch (err) {
-    // In production static hosting without Vite server, silently fallback to localStorage
+  } catch {
+    // In production static hosting or Capacitor APK without Vite server, silently fallback to localStorage
     return false;
   }
 }

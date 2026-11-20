@@ -62,14 +62,44 @@ export const App: React.FC = () => {
     setStats(getDashboardStats());
   }, []);
 
-  // Initial load
+  // Initial load & native widget sync
   useEffect(() => {
-    refreshData();
-    import('./storage/diskSync').then(m => {
-      m.syncFromDisk().then(synced => {
-        if (synced) refreshData();
+    import('./storage/diskSync').then(async m => {
+      m.bootstrapInitialData();
+      refreshData();
+      const synced = await m.syncFromDisk();
+      if (synced) refreshData();
+
+      import('./utils/vocabWidgetBridge').then(async wb => {
+        const applied = await wb.consumePendingNativeReviews();
+        if (applied) refreshData();
+        await wb.syncWordsToAndroidWidget(loadVocabulary());
+      });
+
+      import('./storage/cloudSync').then(async cs => {
+        const cfg = cs.loadCloudSyncConfig();
+        if (cfg.autoSync && cfg.token.trim()) {
+          const res = await cs.syncWithCloud('merge');
+          if (res.success && res.updated) {
+            refreshData();
+            import('./utils/vocabWidgetBridge').then(wb =>
+              wb.syncWordsToAndroidWidget(loadVocabulary())
+            );
+          }
+        }
       });
     });
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        import('./utils/vocabWidgetBridge').then(async wb => {
+          const applied = await wb.consumePendingNativeReviews();
+          if (applied) refreshData();
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [refreshData]);
 
   // Start a new study session
@@ -155,11 +185,12 @@ export const App: React.FC = () => {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onDataSynced={refreshData}
         isStudying={isStudying}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6 pb-24 md:pb-8">
         
         {/* Active Study Session (Retrieval or Flashcard) */}
         {isStudying && sessionStyle === 'flashcard' ? (
@@ -364,6 +395,7 @@ export const App: React.FC = () => {
             setSettings(newSettings);
             refreshData();
           }}
+          onDataSynced={refreshData}
         />
       )}
 

@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+
 /**
  * Cleans text for natural English speech synthesis.
  * Removes slashes, expands standard dictionary abbreviations,
@@ -47,18 +50,37 @@ export function cleanTextForSpeech(text: string): string {
 }
 
 /**
- * Uses the browser's Web Speech API for instant native English pronunciation.
+ * Uses native Android/iOS TTS when running in Capacitor,
+ * or the browser's Web Speech API on web.
  */
 export function playPronunciation(text: string): void {
+  const spokenText = cleanTextForSpeech(text);
+  if (!spokenText) return;
+
+  if (Capacitor.isNativePlatform()) {
+    TextToSpeech.stop()
+      .catch(() => {})
+      .finally(() => {
+        TextToSpeech.speak({
+          text: spokenText,
+          lang: 'en-US',
+          rate: 0.9,
+          pitch: 1.0,
+          volume: 1.0,
+          category: 'ambient',
+        }).catch(err => {
+          console.error('Native TTS error:', err);
+        });
+      });
+    return;
+  }
+
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     return;
   }
 
   try {
     window.speechSynthesis.cancel(); // Stop any pending speech
-
-    const spokenText = cleanTextForSpeech(text);
-    if (!spokenText) return;
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = 'en-US';

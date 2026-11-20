@@ -30,6 +30,10 @@ export function saveVocabulary(items: VocabularyItem[]): void {
     localStorage.setItem(VOCAB_KEY, JSON.stringify(items));
     // Asynchronously backup directly to disk
     import('./diskSync').then(m => m.syncToDisk()).catch(() => {});
+    // Asynchronously sync words to Android Home/Lock Screen Widget
+    import('../utils/vocabWidgetBridge')
+      .then(m => m.syncWordsToAndroidWidget(items))
+      .catch(() => {});
   } catch (err) {
     console.error('Failed to save vocabulary:', err);
   }
