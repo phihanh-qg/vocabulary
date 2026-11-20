@@ -44,15 +44,16 @@ public class VocabWidgetProvider extends AppWidgetProvider {
 
         if (entry != null && !entry.word.isEmpty()) {
             views.setTextViewText(R.id.widget_word, entry.word);
-            views.setTextViewText(R.id.widget_pos, entry.partOfSpeech.isEmpty() ? "vocab" : entry.partOfSpeech);
-            views.setTextViewText(R.id.widget_ipa, entry.pronunciation.isEmpty() ? "Chạm để kiểm tra nghĩa" : entry.pronunciation);
+            String sub = "";
+            if (!entry.partOfSpeech.isEmpty()) sub += "(" + entry.partOfSpeech + ") ";
+            if (!entry.pronunciation.isEmpty()) sub += entry.pronunciation;
+            views.setTextViewText(R.id.widget_ipa, sub.isEmpty() ? "Chạm để kiểm tra" : sub.trim());
         } else {
             views.setTextViewText(R.id.widget_word, "ActiveRecall");
-            views.setTextViewText(R.id.widget_pos, "sync");
-            views.setTextViewText(R.id.widget_ipa, "Mở app để nạp danh sách từ vựng");
+            views.setTextViewText(R.id.widget_ipa, "Mở app để nạp từ");
         }
 
-        // Check button -> opens QuickRecallActivity
+        // Tap anywhere on word -> opens QuickRecallActivity to type & check
         Intent checkIntent = new Intent(context, QuickRecallActivity.class);
         checkIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent checkPending = PendingIntent.getActivity(
@@ -61,10 +62,10 @@ public class VocabWidgetProvider extends AppWidgetProvider {
             checkIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
-        views.setOnClickPendingIntent(R.id.widget_btn_check, checkPending);
         views.setOnClickPendingIntent(R.id.widget_root, checkPending);
+        views.setOnClickPendingIntent(R.id.widget_word, checkPending);
 
-        // Next button -> cycles word
+        // Tap ↻ -> cycle to next word
         Intent nextIntent = new Intent(context, VocabWidgetProvider.class);
         nextIntent.setAction(ACTION_NEXT_WORD);
         PendingIntent nextPending = PendingIntent.getBroadcast(

@@ -130,15 +130,17 @@ public class LockScreenService extends Service {
     private static Notification buildNotification(Context context) {
         VocabPrefsHelper.WordEntry entry = VocabPrefsHelper.getCurrentWord(context);
         String title = entry != null && !entry.word.isEmpty()
-            ? "🎯 Từ cần nhớ: " + entry.word
-            : "ActiveRecall • Sẵn sàng ôn tập";
+            ? entry.word
+            : "ActiveRecall";
 
         StringBuilder sub = new StringBuilder();
         if (entry != null) {
             if (!entry.partOfSpeech.isEmpty()) sub.append("(").append(entry.partOfSpeech).append(") ");
-            if (!entry.pronunciation.isEmpty()) sub.append(entry.pronunciation).append(" • ");
+            if (!entry.pronunciation.isEmpty()) sub.append(entry.pronunciation);
         }
-        sub.append("Chạm để nhập nghĩa kiểm tra");
+        if (sub.length() == 0) {
+            sub.append("Chạm để nhập nghĩa");
+        }
 
         Intent checkIntent = new Intent(context, QuickRecallActivity.class);
         checkIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
