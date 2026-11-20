@@ -31,11 +31,14 @@ public class LockScreenService extends Service {
         unlockReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (Intent.ACTION_USER_PRESENT.equals(intent.getAction())) {
-                    // Advance to next word each unlock so user sees fresh vocab
-                    VocabPrefsHelper.advanceWord(context);
-                    VocabWidgetProvider.refreshAllWidgets(context);
-                    updateNotification(context);
+                String action = intent.getAction();
+                if (Intent.ACTION_SCREEN_ON.equals(action) || Intent.ACTION_USER_PRESENT.equals(action)) {
+                    if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                        // Advance to a fresh word when waking up the lock screen
+                        VocabPrefsHelper.advanceWord(context);
+                        VocabWidgetProvider.refreshAllWidgets(context);
+                        updateNotification(context);
+                    }
 
                     if (VocabPrefsHelper.isAutoPopupOnUnlock(context)) {
                         boolean canDraw = Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(context);
@@ -49,7 +52,9 @@ public class LockScreenService extends Service {
             }
         };
 
-        IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(unlockReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {

@@ -18,9 +18,10 @@ import java.util.Locale;
 
 public class QuickRecallActivity extends AppCompatActivity {
     private TextView tvWord, tvMeta, tvResultStatus, tvResultMeaning, tvResultExample;
+    private TextView btnSpeak, btnClose;
     private EditText etInput;
     private LinearLayout resultBox;
-    private Button btnCheck, btnReveal, btnNext, btnSpeak, btnClose;
+    private Button btnCheck, btnReveal, btnNext;
 
     private VocabPrefsHelper.WordEntry currentWord;
     private TextToSpeech tts;
@@ -77,6 +78,7 @@ public class QuickRecallActivity extends AppCompatActivity {
         });
         btnSpeak.setOnClickListener(v -> speakCurrentWord());
         btnClose.setOnClickListener(v -> finish());
+        findViewById(R.id.qr_backdrop).setOnClickListener(v -> finish());
 
         etInput.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -134,17 +136,17 @@ public class QuickRecallActivity extends AppCompatActivity {
         btnReveal.setEnabled(false);
 
         if (correct) {
-            resultBox.setBackgroundColor(Color.parseColor("#ECFDF5"));
+            resultBox.setBackgroundColor(Color.parseColor("#3310B981"));
             tvResultStatus.setText("✓ Chính xác!");
-            tvResultStatus.setTextColor(Color.parseColor("#047857"));
+            tvResultStatus.setTextColor(Color.parseColor("#34D399"));
         } else if (revealedOnly) {
-            resultBox.setBackgroundColor(Color.parseColor("#FFFBEB"));
+            resultBox.setBackgroundColor(Color.parseColor("#33F59E0B"));
             tvResultStatus.setText("💡 Đáp án:");
-            tvResultStatus.setTextColor(Color.parseColor("#B45309"));
+            tvResultStatus.setTextColor(Color.parseColor("#FBBF24"));
         } else {
-            resultBox.setBackgroundColor(Color.parseColor("#FFF1F2"));
+            resultBox.setBackgroundColor(Color.parseColor("#33F43F5E"));
             tvResultStatus.setText("✗ Chưa chính xác");
-            tvResultStatus.setTextColor(Color.parseColor("#BE123C"));
+            tvResultStatus.setTextColor(Color.parseColor("#FB7185"));
         }
 
         tvResultMeaning.setText("Nghĩa: " + currentWord.meaning);
